@@ -51,7 +51,7 @@ class test_sqli():
                     params[i] = param_bak
 
     def test_sqli_body(self, method, uri, version, header, body, host):
-        with open(self.conf['scanner_path'] + "payloads\\poc_sqlserver.txt", "r") as fp:
+        with open(self.conf['scanner_path'] + self.conf['payload_file'], "r") as fp:
             payloads = fp.readlines()
 
         if method != 'POST':
