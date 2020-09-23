@@ -51,8 +51,8 @@ def do_scan_thread():
                 fun.run(pkg['method'], pkg['uri'], pkg['version'], pkg['header'], pkg['body'], pkg['host'])
             # testing finished
         else:
-            time.sleep(1)
             glo_lock.release()
+            time.sleep(1)
 
 def main():
     global glo_pkg_list
