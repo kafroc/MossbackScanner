@@ -1,0 +1,8 @@
+{
+    "scanner_path": "C:/Users/mossback/Desktop/mossbackScaner/",
+    "payload_file": "payloads/mysql_payloads.txt",
+    "server_host": "192.168.1.2",
+    "scanner_host": "127.0.0.1",
+    "interval": 100,
+    "scanner_port": 9999
+}
