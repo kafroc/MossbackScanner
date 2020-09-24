@@ -16,14 +16,17 @@ import hashlib
 import subprocess
 from subprocess import PIPE
 from scanner_sqli import test_sqli
+from scanner_unauth_access import test_unauth_access
 
 global glo_conf
 global glo_pkg_list
 global glo_lock
 global glo_scanner
 
+
 def scanner_factory(name):
     return eval(name + "()")
+
 
 with open('config.json', 'r') as fp:
     glo_conf = json.loads(fp.read())
@@ -34,6 +37,8 @@ glo_lock = threading.Lock()
 
 glo_scanner = []
 glo_scanner.append(scanner_factory("test_sqli"))
+glo_scanner.append(scanner_factory("test_unauth_access"))
+
 
 def do_scan_thread():
     global glo_pkg_list
@@ -45,23 +50,25 @@ def do_scan_thread():
         if len(glo_pkg_list) > 0:
             pkg = json.loads(glo_pkg_list.pop(0))
             glo_lock.release()
-            
+
             # do all test here
             for fun in glo_scanner:
-                fun.run(pkg['method'], pkg['uri'], pkg['version'], pkg['header'], pkg['body'], pkg['host'])
+                fun.run(pkg['method'], pkg['uri'], pkg['version'],
+                        pkg['header'], pkg['body'], pkg['host'])
             # testing finished
         else:
             glo_lock.release()
             time.sleep(1)
 
+
 def main():
     global glo_pkg_list
     global glo_lock
     global glo_conf
-    
+
     t = threading.Thread(target=do_scan_thread, args=())
     t.start()
-    
+
     BUFSIZ = 1024
     ADDRESS = ('', glo_conf['scanner_port'])
     udpServerSocket = socket(AF_INET, SOCK_DGRAM)
@@ -90,6 +97,7 @@ def main():
         glo_lock.release()
 
     udpServerSocket.close()
+
 
 if __name__ == "__main__":
     main()
