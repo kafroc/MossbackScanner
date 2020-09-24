@@ -10,6 +10,7 @@ import hashlib
 
 UDP_PACK_LEN = 1024
 
+
 class parse_request:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -18,40 +19,17 @@ class parse_request:
             conf = json.loads(fp.read())
             self.scanner_path = conf['scanner_path']
             self.server_host = conf['server_host']
-            self.scanner_srv = (conf['scanner_host'], conf['scanner_port']) 
- 
-    def check_repeat_package(self, method, uri, body):
-        # DEBUG
-        return True
-    
-        hash_msg = method
-        uris = uri.split('?')
-        hash_msg += uris[0]
-        if len(uris) >= 2:
-            parms = uris[1].split('&')
-            for parm in parms:
-                hash_msg += parm.split('=')[0]
-        if method == 'POST':
-            parms = body.split('&')
-            for parm in parms:
-                hash_msg += parm.split('=')[0]
-        m = hashlib.md5()
-        m.update(hash_msg.encode())
-        h = m.hexdigest()
-        if h in self.reqhash:
-            return False
-        self.reqhash.append(h)
-        return True
-        
+            self.scanner_srv = (conf['scanner_host'], conf['scanner_port'])
+
     def request(self, flow: mitmproxy.http.HTTPFlow):
         req = flow.request
-        
+
         if self.server_host in req.url:
             dic = {}
             dic['method'] = req.method
             dic['uri'] = req.path
             dic['version'] = req.http_version
-            
+
             # headers
             header = {}
             for key, value in req.headers.items():
@@ -59,34 +37,35 @@ class parse_request:
                 if key == 'Host':
                     dic['host'] = value
             dic['header'] = json.dumps(header)
-            
+
             # post body
             dic['body'] = req.text
-            
-            if self.check_repeat_package(req.method, req.path, req.text) is False:
-                return
-            
+
             output = json.dumps(dic)
             m = hashlib.md5()
             m.update(output.encode())
 
-            pack_len= len(output) 
+            pack_len = len(output)
             pack_num = pack_len // UDP_PACK_LEN
             if pack_len % UDP_PACK_LEN != 0:
                 pack_num += 1
 
-            self.client.sendto((str(pack_num).zfill(4) + m.hexdigest()).encode('utf-8'), self.scanner_srv)
+            self.client.sendto((str(pack_num).zfill(
+                4) + m.hexdigest()).encode('utf-8'), self.scanner_srv)
             time.sleep(0.01)
-                
+
             for i in range(pack_num - 1):
-                self.client.sendto(output[i * UDP_PACK_LEN:(i + 1) * UDP_PACK_LEN].encode('utf-8'), self.scanner_srv)
+                self.client.sendto(
+                    output[i * UDP_PACK_LEN:(i + 1) * UDP_PACK_LEN].encode('utf-8'), self.scanner_srv)
                 time.sleep(0.01)
 
-            self.client.sendto(output[(pack_num - 1) * UDP_PACK_LEN:].encode('utf-8'), self.scanner_srv)
-            
+            self.client.sendto(
+                output[(pack_num - 1) * UDP_PACK_LEN:].encode('utf-8'), self.scanner_srv)
+
             response, _ = self.client.recvfrom(2)
             if response.decode() != "OK":
                 time.sleep(0.5)
+
 
 addons = [
     parse_request()
