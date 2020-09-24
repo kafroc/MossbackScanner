@@ -27,7 +27,7 @@ class test_unauth_access():
 
     def run(self, method, uri, version, header, body, host):
         print('Doing unauth access: ' + uri)
-        if uri.split('?')[0].split('.')[-1] not in ['html', 'htm', 'shtml', 'js', 'css', 'jpeg', 'jpg', 'png', 'gif']:
+        if uri.split('?')[0].split('.')[-1] not in ['html', 'htm', 'shtml', 'js', 'css', 'jpeg', 'jpg', 'png', 'gif', 'ico', 'woff2', 'txt']:
             l1 = self.test_req_with_cookie(
                 method, uri, version, header, body, host)
             l2 = self.test_req_without_cookie(
