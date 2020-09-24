@@ -2,29 +2,17 @@ import json
 import time
 import socket
 import http.client
+from utils import format_save
+from utils import check_repeat_package
+
 
 class test_sqli():
     def __init__(self):
-        self.filecnt = 1
         with open('config.json', 'r') as fp:
             self.conf = json.loads(fp.read())
-    
-    def format_save(self, method, uri, version, header, body):
-        print("================ FIND VUL ================")
-        
-        first_line = method + ' ' + uri + ' ' + version + '\n'
-        hj = json.loads(header)
-        for head in hj:
-            first_line += head + ': ' + hj[head] + '\n'
-        first_line += '\n'
-        if method == 'POST':
-            first_line += body
+        self.log = format_save('SQLi')
+        self.checkpkg = check_repeat_package()
 
-        fn = self.conf['scanner_path'] + "logs/" + time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime()) + '_SQLi.txt'
-        with open(fn, 'w') as fp:
-            fp.write(first_line)
-        self.filecnt += 1
-    
     def test_sqli_uri(self, method, uri, version, header, body, host):
         with open(self.conf['scanner_path'] + self.conf['payload_file'], "r") as fp:
             payloads = fp.readlines()
@@ -39,16 +27,18 @@ class test_sqli():
                 for payload in payloads:
                     time.sleep(0.001 * self.conf["interval"])
                     params[i] = param_bak + payload.strip()
-                    #print(params[i])
+                    # print(params[i])
                     uri_new = '&'.join(params)
                     # print(uri_new)
                     hc = http.client.HTTPConnection(host, timeout=3)
-                    hc.request(method, path+uri_new.replace(' ', '%20'), body, json.loads(header))
+                    hc.request(method, path+uri_new.replace(' ',
+                                                            '%20'), body, json.loads(header))
                     try:
                         hc.getresponse().read()
                     except socket.timeout as exp:
-                        self.format_save(method, path+uri_new.replace(' ', '%20'), version, header, body)
-                        # break 
+                        self.log.format_save(
+                            method, path+uri_new.replace(' ', '%20'), version, header, body)
+                        # break
                     except Exception as exp:
                         print(exp)
                     params[i] = param_bak
@@ -72,12 +62,16 @@ class test_sqli():
                 try:
                     hc.getresponse().read()
                 except socket.timeout as exp:
-                    self.format_save(method, uri, version, header, body_new)
+                    self.log.format_save(
+                        method, uri, version, header, body_new)
                 except Exception as exp:
                     print(exp)
                 bodys[i] = body_bak
-                    
+
     def run(self, method, uri, version, header, body, host):
+        if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
+            return
+
         print('Doing SQL injection: ' + uri)
         self.test_sqli_uri(method, uri, version, header, body, host)
         if method == 'POST':
