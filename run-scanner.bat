@@ -1,3 +1,3 @@
-python C:\Users\mossback\Desktop\MossbackScaner\mossbackScaner.py
+python  mossbackScaner.py
 
 pause
