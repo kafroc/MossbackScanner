@@ -1,3 +1,6 @@
-python  mossbackScaner.py
+start /b mitmdump -s mitmScript.py -p 8899
 
-pause
+::tasklist
+::taskkill /im mitmdump.exe /t /f
+
+start /b python  mossbackScaner.py
