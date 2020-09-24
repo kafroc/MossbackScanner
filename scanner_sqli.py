@@ -1,5 +1,6 @@
 import json
 import time
+import socket
 import http.client
 
 class test_sqli():
@@ -9,6 +10,8 @@ class test_sqli():
             self.conf = json.loads(fp.read())
     
     def format_save(self, method, uri, version, header, body):
+        print("================ FIND VUL ================")
+        
         first_line = method + ' ' + uri + ' ' + version + '\n'
         hj = json.loads(header)
         for head in hj:
@@ -43,42 +46,35 @@ class test_sqli():
                     hc.request(method, path+uri_new.replace(' ', '%20'), body, json.loads(header))
                     try:
                         hc.getresponse().read()
-                    except Exception as exp:
-                        print("=========== FIND VUL. =============")
-                        print(uri_new.replace(' ', '%20'))
+                    except socket.timeout as exp:
                         self.format_save(method, path+uri_new.replace(' ', '%20'), version, header, body)
                         # break 
+                    except Exception as exp:
+                        print(exp)
                     params[i] = param_bak
 
     def test_sqli_body(self, method, uri, version, header, body, host):
         with open(self.conf['scanner_path'] + self.conf['payload_file'], "r") as fp:
             payloads = fp.readlines()
 
-        if method != 'POST':
-            return
-        
         bodys = body.split('&')
         for i in range(len(bodys)):
             body_bak = bodys[i]
-            if 'ContentPlaceHolder1%24code=' not in body_bak:
-                continue
             for payload in payloads:
                 time.sleep(0.001 * self.conf["interval"])
                 bodys[i] = body_bak + payload.strip()
                 body_new = '&'.join(bodys)
                 # print(body_new)
                 hc = http.client.HTTPConnection(host, timeout=3)
-
                 hj = json.loads(header)
-                hj['Content-Length'] = len(body_new.replace(' ', '%20'))
-                hc.request(method, uri, body_new.replace(' ', '%20'), hj)
+                hj['Content-Length'] = len(body_new)
+                hc.request(method, uri, body_new, hj)
                 try:
                     hc.getresponse().read()
+                except socket.timeout as exp:
+                    self.format_save(method, uri, version, header, body_new)
                 except Exception as exp:
-                    print("=========== FIND VUL. =============")
-                    print(body_new.replace(' ', '%20'))
-                    self.format_save(method, uri, version, header, body_new.replace(' ', '%20'))
-                    # break
+                    print(exp)
                 bodys[i] = body_bak
                     
     def run(self, method, uri, version, header, body, host):
