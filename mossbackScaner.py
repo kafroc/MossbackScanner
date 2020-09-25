@@ -17,6 +17,7 @@ import subprocess
 from subprocess import PIPE
 from scanner_sqli import test_sqli
 from scanner_unauth_access import test_unauth_access
+from color_print import *
 
 global glo_conf
 global glo_pkg_list
@@ -55,7 +56,7 @@ def do_scan_thread():
             for fun in glo_scanner:
                 fun.run(pkg['method'], pkg['uri'], pkg['version'],
                         pkg['header'], pkg['body'], pkg['host'])
-            # testing finished
+            # test finished
         else:
             glo_lock.release()
             time.sleep(1)
@@ -87,7 +88,7 @@ def main():
         m.update(pack_data.encode())
 
         if pack_meta[4:] != m.hexdigest():
-            print("[ERROR] the hash of received message incorrect.")
+            printDarkRed("[ERROR] the hash of received message incorrect.")
             udpServerSocket.sendto("ER".encode('utf-8'), pack_from)
         else:
             udpServerSocket.sendto("OK".encode('utf-8'), pack_from)
