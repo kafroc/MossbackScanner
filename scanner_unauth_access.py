@@ -2,6 +2,8 @@ import json
 import time
 import http.client
 from utils import format_save
+from utils import check_repeat_package
+from color_print import *
 
 
 class test_unauth_access():
@@ -10,6 +12,8 @@ class test_unauth_access():
         with open('config.json', 'r') as fp:
             self.conf = json.loads(fp.read())
         self.log = format_save('unauth')
+        self.checkpkg = check_repeat_package(key_with_value=True)
+        self.name = 'unauth access'
 
     def test_req_with_cookie(self, method, uri, version, header, body, host):
         hc = http.client.HTTPConnection(host, timeout=3)
@@ -26,8 +30,15 @@ class test_unauth_access():
         return l2
 
     def run(self, method, uri, version, header, body, host):
-        print('Doing unauth access: ' + uri)
+        if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
+            return
+
+        if "Cookie: " not in header:
+            return
+
         if uri.split('?')[0].split('.')[-1] not in ['html', 'htm', 'shtml', 'js', 'css', 'jpeg', 'jpg', 'png', 'gif', 'ico', 'woff2', 'txt']:
+            printGreen('Doing %s testing: %s' % (self.name, uri))
+
             l1 = self.test_req_with_cookie(
                 method, uri, version, header, body, host)
             l2 = self.test_req_without_cookie(
@@ -35,5 +46,3 @@ class test_unauth_access():
 
             if int(l1) == int(l2):
                 self.log.format_save(method, uri, version, header, body)
-            else:
-                print(int(l1) - int(l2))
