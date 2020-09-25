@@ -36,7 +36,7 @@ class test_unauth_access():
         if "Cookie" not in header:
             return
 
-        if uri.split('?')[0].split('.')[-1] not in ['html', 'htm', 'shtml', 'js', 'css', 'jpeg', 'jpg', 'png', 'gif', 'ico', 'woff2', 'txt']:
+        if uri.split('?')[0].split('.')[-1] not in self.conf['static']:
             printGreen('Doing %s testing: %s' % (self.name, uri))
 
             l1 = self.test_req_with_cookie(
@@ -44,5 +44,8 @@ class test_unauth_access():
             l2 = self.test_req_without_cookie(
                 method, uri, version, header, body, host)
 
-            if int(l1) == int(l2):
-                self.log.format_save(method, uri, version, header, body)
+            try:
+                if int(l1) == int(l2):
+                    self.log.format_save(method, uri, version, header, body)
+            except Exception as exp:
+                printRed(exp)
