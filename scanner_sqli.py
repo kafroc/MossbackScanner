@@ -1,6 +1,7 @@
 import json
 import time
 import socket
+import random
 import http.client
 from utils import format_save
 from utils import check_repeat_package
@@ -27,7 +28,8 @@ class test_sqli():
             for i in range(len(params)):
                 param_bak = params[i]
                 for payload in payloads:
-                    time.sleep(0.001 * self.conf["interval"])
+                    time.sleep(
+                        0.001 * self.conf["interval"] + 0.1 * random.randint(1, 9))
                     params[i] = param_bak + payload.strip()
                     uri_new = '&'.join(params)
                     hc = http.client.HTTPConnection(host, timeout=3)
@@ -51,7 +53,8 @@ class test_sqli():
         for i in range(len(bodys)):
             body_bak = bodys[i]
             for payload in payloads:
-                time.sleep(0.001 * self.conf["interval"])
+                time.sleep(
+                    0.001 * self.conf["interval"] + 0.1 * random.randint(1, 9))
                 bodys[i] = body_bak + payload.strip()
                 body_new = '&'.join(bodys)
                 hc = http.client.HTTPConnection(host, timeout=3)
@@ -69,6 +72,8 @@ class test_sqli():
 
     def run(self, method, uri, version, header, body, host):
         if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
+            return
+        if uri.split('?')[0].split('.')[-1] in self.conf['static']:
             return
         printGreen('Doing %s testing: %s' % (self.name, uri))
         self.test_sqli_uri(method, uri, version, header, body, host)
