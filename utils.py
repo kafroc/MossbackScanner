@@ -1,6 +1,9 @@
 import time
 import json
 import hashlib
+import ctypes
+import sys
+from color_print import *
 
 
 class format_save():
@@ -11,7 +14,8 @@ class format_save():
             self.conf = json.loads(fp.read())
 
     def format_save(self, method, uri, version, header, body):
-        print("================ FIND NEW VUL (%s) ================" % self.postfix)
+        printRed("================ FIND NEW VUL (%s) ================\nURI: %s %s" % (
+            self.postfix, method, uri))
 
         pkg_content = method + ' ' + uri + ' ' + version + '\n'
         hj = json.loads(header)
@@ -30,26 +34,40 @@ class format_save():
 
 
 class check_repeat_package():
-    def __init__(self):
+    def __init__(self, key_with_value=False):
         self.reqhash = []
+        self.key_with_value = key_with_value
 
     def is_repeat_pkg(self, method, uri, body):
-        hash_msg = method
-        uris = uri.split('?')
-        hash_msg += uris[0]
-        if len(uris) >= 2:
-            parms = uris[1].split('&')
-            for parm in parms:
-                hash_msg += parm.split('=')[0]
-        if method == 'POST':
-            parms = body.split('&')
-            for parm in parms:
-                hash_msg += parm.split('=')[0]
-        m = hashlib.md5()
-        m.update(hash_msg.encode())
-        h = m.hexdigest()
-        if h in self.reqhash:
-            return True
+        if self.key_with_value is False:
+            hash_msg = method
+            uris = uri.split('?')
+            hash_msg += uris[0]
+            if len(uris) >= 2:
+                parms = uris[1].split('&')
+                for parm in parms:
+                    hash_msg += parm.split('=')[0]
+            if method == 'POST':
+                parms = body.split('&')
+                for parm in parms:
+                    hash_msg += parm.split('=')[0]
+            m = hashlib.md5()
+            m.update(hash_msg.encode())
+            h = m.hexdigest()
+            if h in self.reqhash:
+                return True
 
-        self.reqhash.append(h)
-        return False
+            self.reqhash.append(h)
+            return False
+        else:
+            hash_msg = method + uri
+            if method == 'POST':
+                hash_msg += body
+            m = hashlib.md5()
+            m.update(hash_msg.encode())
+            h = m.hexdigest()
+            if h in self.reqhash:
+                return True
+
+            self.reqhash.append(h)
+            return False
