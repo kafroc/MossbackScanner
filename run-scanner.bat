@@ -1,4 +1,4 @@
-start /b mitmdump -s mitmScript.py -p 8899
+start /b mitmdump -s mitmScript.py -p 8899 > nul 2>&1
 
 ::tasklist
 ::taskkill /im mitmdump.exe /t /f
