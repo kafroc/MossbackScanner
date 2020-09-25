@@ -4,14 +4,16 @@ import socket
 import http.client
 from utils import format_save
 from utils import check_repeat_package
+from color_print import *
 
 
 class test_sqli():
     def __init__(self):
         with open('config.json', 'r') as fp:
             self.conf = json.loads(fp.read())
+        self.name = 'SQLi'
         self.log = format_save('SQLi')
-        self.checkpkg = check_repeat_package()
+        self.checkpkg = check_repeat_package(key_with_value=False)
 
     def test_sqli_uri(self, method, uri, version, header, body, host):
         with open(self.conf['scanner_path'] + self.conf['payload_file'], "r") as fp:
@@ -27,9 +29,7 @@ class test_sqli():
                 for payload in payloads:
                     time.sleep(0.001 * self.conf["interval"])
                     params[i] = param_bak + payload.strip()
-                    # print(params[i])
                     uri_new = '&'.join(params)
-                    # print(uri_new)
                     hc = http.client.HTTPConnection(host, timeout=3)
                     hc.request(method, path+uri_new.replace(' ',
                                                             '%20'), body, json.loads(header))
@@ -40,7 +40,7 @@ class test_sqli():
                             method, path+uri_new.replace(' ', '%20'), version, header, body)
                         # break
                     except Exception as exp:
-                        print(exp)
+                        printDarkRed(exp)
                     params[i] = param_bak
 
     def test_sqli_body(self, method, uri, version, header, body, host):
@@ -54,7 +54,6 @@ class test_sqli():
                 time.sleep(0.001 * self.conf["interval"])
                 bodys[i] = body_bak + payload.strip()
                 body_new = '&'.join(bodys)
-                # print(body_new)
                 hc = http.client.HTTPConnection(host, timeout=3)
                 hj = json.loads(header)
                 hj['Content-Length'] = len(body_new)
@@ -65,14 +64,13 @@ class test_sqli():
                     self.log.format_save(
                         method, uri, version, header, body_new)
                 except Exception as exp:
-                    print(exp)
+                    printDarkRed(exp)
                 bodys[i] = body_bak
 
     def run(self, method, uri, version, header, body, host):
         if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
             return
-
-        print('Doing SQL injection: ' + uri)
+        printGreen('Doing %s testing: %s' % (self.name, uri))
         self.test_sqli_uri(method, uri, version, header, body, host)
         if method == 'POST':
             self.test_sqli_body(method, uri, version, header, body, host)
