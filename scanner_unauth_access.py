@@ -33,7 +33,7 @@ class test_unauth_access():
         if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
             return
 
-        if "Cookie: " not in header:
+        if "Cookie" not in header:
             return
 
         if uri.split('?')[0].split('.')[-1] not in ['html', 'htm', 'shtml', 'js', 'css', 'jpeg', 'jpg', 'png', 'gif', 'ico', 'woff2', 'txt']:
