@@ -19,7 +19,7 @@ class test_unauth_access():
         hc = http.client.HTTPConnection(host, timeout=3)
         hc.request(method, uri, body, json.loads(header))
         l1 = hc.getresponse().getheader("Content-Length")
-        return l1
+        return int(l1.decode())
 
     def test_req_without_cookie(self, method, uri, version, header, body, host):
         hc = http.client.HTTPConnection(host, timeout=3)
@@ -27,7 +27,7 @@ class test_unauth_access():
         hj["Cookie"] = ''
         hc.request(method, uri, body, hj)
         l2 = hc.getresponse().getheader("Content-Length")
-        return l2
+        return int(l2.decode())
 
     def run(self, method, uri, version, header, body, host):
         if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
@@ -45,7 +45,7 @@ class test_unauth_access():
                 method, uri, version, header, body, host)
 
             try:
-                if int(l1) == int(l2):
+                if l1 == l2:
                     self.log.format_save(method, uri, version, header, body)
             except Exception as exp:
                 printRed(exp)
