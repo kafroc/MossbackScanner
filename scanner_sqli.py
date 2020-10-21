@@ -29,7 +29,7 @@ class test_sqli():
                 param_bak = params[i]
                 for payload in payloads:
                     time.sleep(
-                        0.001 * self.conf["interval"] + 0.1 * random.randint(1, 9))
+                        0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
                     params[i] = param_bak + payload.strip()
                     uri_new = '&'.join(params)
                     hc = http.client.HTTPConnection(host, timeout=3)
@@ -54,7 +54,7 @@ class test_sqli():
             body_bak = bodys[i]
             for payload in payloads:
                 time.sleep(
-                    0.001 * self.conf["interval"] + 0.1 * random.randint(1, 9))
+                    0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
                 bodys[i] = body_bak + payload.strip()
                 body_new = '&'.join(bodys)
                 hc = http.client.HTTPConnection(host, timeout=3)
