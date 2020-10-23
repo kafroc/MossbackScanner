@@ -33,8 +33,11 @@ class test_sqli():
                     params[i] = param_bak + payload.strip()
                     uri_new = '&'.join(params)
                     hc = http.client.HTTPConnection(host, timeout=3)
-                    hc.request(method, path+uri_new.replace(' ',
-                                                            '%20'), body, json.loads(header))
+                    try:
+                        hc.request(method, path+uri_new.replace(' ',
+                                                                '%20'), body, json.loads(header))
+                    except Exception as exp:
+                        printDarkRed(exp)
                     try:
                         hc.getresponse().read()
                     except socket.timeout as exp:
@@ -60,7 +63,10 @@ class test_sqli():
                 hc = http.client.HTTPConnection(host, timeout=3)
                 hj = json.loads(header)
                 hj['Content-Length'] = len(body_new)
-                hc.request(method, uri, body_new, hj)
+                try:
+                    hc.request(method, uri, body_new, hj)
+                except Exception as exp:
+                    printDarkRed(exp)
                 try:
                     hc.getresponse().read()
                 except socket.timeout as exp:
