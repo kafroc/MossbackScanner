@@ -81,7 +81,7 @@ class test_sqli():
             return
         if uri.split('?')[0].split('.')[-1] in self.conf['static']:
             return
-        printGreen('Doing %s testing: %s' % (self.name, uri))
+        printGreen('Doing %s testing: %s %s' % (self.name, method, uri))
         self.test_sqli_uri(method, uri, version, header, body, host)
         if method == 'POST':
             self.test_sqli_body(method, uri, version, header, body, host)
