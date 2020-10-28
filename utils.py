@@ -27,7 +27,7 @@ class format_save():
 
         fn = self.conf['scanner_path'] + "logs/" + time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime(
         )) + '_' + str(self.total_cnt).zfill(4) + '_' + self.postfix + '.txt'
-        with open(fn, 'w') as fp:
+        with open(fn, 'w', errors='ignore') as fp:
             fp.write(pkg_content)
 
         self.total_cnt += 1
