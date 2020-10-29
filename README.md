@@ -1,5 +1,6 @@
 # MossbackScanner
-这是一个基于mitmproxy的Web应用漏洞扫描工具。
+这是一个基于mitmproxy的被动式Web应用漏洞扫描工具。
+** 请使用者遵守当地法律，勿将 MossbackScanner 用于未授权的测试，参与本项目开发的任何人员不对因本工具造成的任意破坏负任何连带法律责任。 **
 
 # 使用方式
 ## 配置config.json文件
