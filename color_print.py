@@ -89,9 +89,9 @@ def printDarkPink(mess):
 
 
 # dark yellow
-def printDarkYellow(mess):
+def printDarkYellow(mess, end='\n', flush=False):
     set_cmd_text_color(FOREGROUND_DARKYELLOW)
-    print(mess)
+    print(mess, end=end, flush=flush)
     resetColor()
 
 
