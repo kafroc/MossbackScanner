@@ -76,7 +76,7 @@ def main():
     udpServerSocket.bind(ADDRESS)
 
     while True:
-        # pack_meta = pack_len(4 B) + pack_hash(32 B)
+        # pack_meta = pack_cnt(4 B) + pack_hash(32 B)
         pack_meta, pack_from = udpServerSocket.recvfrom(36)
         pack_meta = pack_meta.decode()
         pack_data = ''
