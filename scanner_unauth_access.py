@@ -16,17 +16,31 @@ class test_unauth_access():
         self.name = 'unauth access'
 
     def test_req_with_cookie(self, method, uri, version, header, body, host):
-        hc = http.client.HTTPConnection(host, timeout=3)
+        if self.conf['https_server'] is True:
+            hc = http.client.HTTPSConnection(host, timeout=3)
+        else:
+            hc = http.client.HTTPConnection(host, timeout=3)
         hc.request(method, uri, body, json.loads(header))
         l1 = hc.getresponse().getheader("Content-Length")
+
+        if l1 is None:
+            return 0
+
         return int(l1)
 
     def test_req_without_cookie(self, method, uri, version, header, body, host):
-        hc = http.client.HTTPConnection(host, timeout=3)
+        if self.conf['https_server'] is True:
+            hc = http.client.HTTPSConnection(host, timeout=3)
+        else:
+            hc = http.client.HTTPConnection(host, timeout=3)
         hj = json.loads(header)
         hj["Cookie"] = ''
         hc.request(method, uri, body, hj)
         l2 = hc.getresponse().getheader("Content-Length")
+
+        if l2 is None:
+            return -1
+
         return int(l2)
 
     def run(self, method, uri, version, header, body, host):
