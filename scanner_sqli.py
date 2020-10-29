@@ -25,6 +25,7 @@ class test_sqli():
             params = params[1].split('&')
 
             for i in range(len(params)):
+                printDarkYellow("*", end='', flush=True)
                 param_bak = params[i]
                 for payload in self.payloads:
                     time.sleep(0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
@@ -47,10 +48,12 @@ class test_sqli():
                     except Exception as exp:
                         printDarkRed(exp)
                     params[i] = param_bak
+            printDarkYellow('')
 
     def test_kv_body(self, method, uri, version, header, body, host):
         bodys = body.split('&')
         for i in range(len(bodys)):
+            printDarkYellow("*", end='', flush=True)
             body_bak = bodys[i]
             for payload in self.payloads:
                 time.sleep(0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
@@ -75,11 +78,15 @@ class test_sqli():
                 except Exception as exp:
                     printDarkRed(exp)
                 bodys[i] = body_bak
+        printDarkYellow('')
 
     def test_json_body(self, method, uri, version, header, body, host):
         bodyj = json.loads(body)
         for key in bodyj:
+            printDarkYellow("*", end='', flush=True)
             body_bak = bodyj[key]
+            if not isinstance(bodyj[key], str):
+                continue
             for payload in self.payloads:
                 time.sleep(0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
                 bodyj[key] = body_bak + payload.strip()
@@ -103,6 +110,7 @@ class test_sqli():
                 except Exception as exp:
                     printDarkRed(exp)
                 bodyj[key] = body_bak
+        printDarkYellow('')
 
     def test_sqli_body(self, method, uri, version, header, body, host):
         try:
@@ -116,7 +124,7 @@ class test_sqli():
             return
         if uri.split('?')[0].split('.')[-1] in self.conf['static']:
             return
-        printGreen('Doing %s testing: %s %s' % (self.name, method, uri))
+        printGreen('Doing %s testing: %s %s/%s' % (self.name, method, host, uri))
         self.test_sqli_uri(method, uri, version, header, body, host)
         if method == 'POST':
             self.test_sqli_body(method, uri, version, header, body, host)
