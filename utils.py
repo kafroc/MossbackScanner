@@ -25,8 +25,7 @@ class format_save():
         if method == 'POST':
             pkg_content += body
 
-        fn = self.conf['scanner_path'] + "logs/" + time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime(
-        )) + '_' + str(self.total_cnt).zfill(4) + '_' + self.postfix + '.txt'
+        fn = "logs/" + time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime()) + '_' + str(self.total_cnt).zfill(4) + '_' + self.postfix + '.txt'
         with open(fn, 'w', errors='ignore') as fp:
             fp.write(pkg_content)
 
@@ -39,27 +38,7 @@ class check_repeat_package():
         self.key_with_value = key_with_value
 
     def is_repeat_pkg(self, method, uri, body):
-        if self.key_with_value is False:
-            hash_msg = method
-            uris = uri.split('?')
-            hash_msg += uris[0]
-            if len(uris) >= 2:
-                parms = uris[1].split('&')
-                for parm in parms:
-                    hash_msg += parm.split('=')[0]
-            if method == 'POST':
-                parms = body.split('&')
-                for parm in parms:
-                    hash_msg += parm.split('=')[0]
-            m = hashlib.md5()
-            m.update(hash_msg.encode())
-            h = m.hexdigest()
-            if h in self.reqhash:
-                return True
-
-            self.reqhash.append(h)
-            return False
-        else:
+        if self.key_with_value is True:
             hash_msg = method + uri
             if method == 'POST':
                 hash_msg += body
@@ -71,3 +50,31 @@ class check_repeat_package():
 
             self.reqhash.append(h)
             return False
+
+        hash_msg = method
+        uris = uri.split('?')
+        hash_msg += uris[0]
+        if len(uris) >= 2:
+            parms = uris[1].split('&')
+            for parm in parms:
+                hash_msg += parm.split('=')[0]
+        
+        if method == 'POST':
+            try:
+                x = json.loads(body)
+                for i in x:
+                    x[i] = ""
+                hash_msg += json.dumps(x)
+            except:
+                parms = body.split('&')
+                for parm in parms:
+                    hash_msg += parm.split('=')[0]
+
+        m = hashlib.md5()
+        m.update(hash_msg.encode())
+        h = m.hexdigest()
+        if h in self.reqhash:
+            return True
+
+        self.reqhash.append(h)
+        return False
