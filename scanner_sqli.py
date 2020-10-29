@@ -7,7 +7,6 @@ from utils import format_save
 from utils import check_repeat_package
 from color_print import *
 
-
 class test_sqli():
     def __init__(self):
         with open('config.json', 'r') as fp:
@@ -15,11 +14,11 @@ class test_sqli():
         self.name = 'SQLi'
         self.log = format_save('SQLi')
         self.checkpkg = check_repeat_package(key_with_value=False)
+        self.blind_timeout = 10
+        with open(self.conf['payload_file'], "r") as fp:
+            self.payloads = fp.read().replace('PH_TIMEOUT', str(self.blind_timeout)).split('\n')
 
     def test_sqli_uri(self, method, uri, version, header, body, host):
-        with open(self.conf['scanner_path'] + self.conf['payload_file'], "r") as fp:
-            payloads = fp.readlines()
-
         params = uri.split('?')
         if len(params) == 2:
             path = params[0] + '?'
@@ -27,55 +26,91 @@ class test_sqli():
 
             for i in range(len(params)):
                 param_bak = params[i]
-                for payload in payloads:
-                    time.sleep(
-                        0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
+                for payload in self.payloads:
+                    time.sleep(0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
                     params[i] = param_bak + payload.strip()
                     uri_new = '&'.join(params)
-                    hc = http.client.HTTPConnection(host, timeout=3)
+
                     try:
-                        hc.request(method, path+uri_new.replace(' ',
-                                                                '%20'), body, json.loads(header))
+                        if self.conf['https_server'] is True:
+                            hc = http.client.HTTPSConnection(host, timeout=self.blind_timeout)
+                        else:
+                            hc = http.client.HTTPConnection(host, timeout=self.blind_timeout)
+                        hc.request(method, path+uri_new.replace(' ', '%20'), body, json.loads(header))
                     except Exception as exp:
                         printDarkRed(exp)
+
                     try:
                         hc.getresponse().read()
                     except socket.timeout as exp:
-                        self.log.format_save(
-                            method, path+uri_new.replace(' ', '%20'), version, header, body)
-                        # break
+                        self.log.format_save(method, path+uri_new.replace(' ', '%20'), version, header, body)
                     except Exception as exp:
                         printDarkRed(exp)
                     params[i] = param_bak
 
-    def test_sqli_body(self, method, uri, version, header, body, host):
-        with open(self.conf['scanner_path'] + self.conf['payload_file'], "r") as fp:
-            payloads = fp.readlines()
-
+    def test_kv_body(self, method, uri, version, header, body, host):
         bodys = body.split('&')
         for i in range(len(bodys)):
             body_bak = bodys[i]
-            for payload in payloads:
-                time.sleep(
-                    0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
+            for payload in self.payloads:
+                time.sleep(0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
                 bodys[i] = body_bak + payload.strip()
                 body_new = '&'.join(bodys)
-                hc = http.client.HTTPConnection(host, timeout=3)
-                hj = json.loads(header)
-                hj['Content-Length'] = len(body_new)
+                
                 try:
+                    if self.conf['https_server'] is True:
+                        hc = http.client.HTTPSConnection(host, timeout=self.blind_timeout)
+                    else:
+                        hc = http.client.HTTPConnection(host, timeout=self.blind_timeout)
+                    hj = json.loads(header)
+                    hj['Content-Length'] = len(body_new)
                     hc.request(method, uri, body_new, hj)
                 except Exception as exp:
                     printDarkRed(exp)
+
                 try:
                     hc.getresponse().read()
                 except socket.timeout as exp:
-                    self.log.format_save(
-                        method, uri, version, header, body_new)
+                    self.log.format_save(method, uri, version, header, body_new)
                 except Exception as exp:
                     printDarkRed(exp)
                 bodys[i] = body_bak
 
+    def test_json_body(self, method, uri, version, header, body, host):
+        bodyj = json.loads(body)
+        for key in bodyj:
+            body_bak = bodyj[key]
+            for payload in self.payloads:
+                time.sleep(0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
+                bodyj[key] = body_bak + payload.strip()
+                body_new = json.dumps(bodyj)
+                
+                try:
+                    if self.conf['https_server'] is True:
+                        hc = http.client.HTTPSConnection(host, timeout=self.blind_timeout)
+                    else:
+                        hc = http.client.HTTPConnection(host, timeout=self.blind_timeout)
+                    hj = json.loads(header)
+                    hj['Content-Length'] = len(body_new)
+                    hc.request(method, uri, body_new, hj)
+                except Exception as exp:
+                    printDarkRed(exp)
+
+                try:
+                    hc.getresponse().read()
+                except socket.timeout as exp:
+                    self.log.format_save(method, uri, version, header, body_new)
+                except Exception as exp:
+                    printDarkRed(exp)
+                bodyj[key] = body_bak
+
+    def test_sqli_body(self, method, uri, version, header, body, host):
+        try:
+            _ = json.loads(body)
+            self.test_json_body(method, uri, version, header, body, host)
+        except:
+            self.test_kv_body(method, uri, version, header, body, host)
+            
     def run(self, method, uri, version, header, body, host):
         if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
             return
