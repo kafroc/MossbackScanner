@@ -17,14 +17,13 @@ class parse_request:
         self.reqhash = []
         with open('config.json', 'r') as fp:
             conf = json.loads(fp.read())
-            self.scanner_path = conf['scanner_path']
             self.server_host = conf['server_host']
             self.scanner_srv = (conf['scanner_host'], conf['scanner_port'])
 
     def request(self, flow: mitmproxy.http.HTTPFlow):
         req = flow.request
 
-        if self.server_host in req.url:
+        if (self.server_host is "*") or (self.server_host in req.url):
             dic = {}
             dic['method'] = req.method
             dic['uri'] = req.path
