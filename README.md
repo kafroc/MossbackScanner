@@ -7,12 +7,14 @@
 ## 配置config.json文件
 ```
 {
-    "scanner_path": "配置扫描器所在的路径，比如C:/Users/DH/Desktop/xasdf/MossbackScanner-master/",
-    "payload_file": "配置扫描器使用的payload文件，比如payloads/mysql_payloads.txt",
-    "server_host": "配置Web服务器地址，比如192.168.1.133，或者www.example.com",
-    "scanner_host": "配置扫描器监听的地址，一般可设置为127.0.0.1，如果mitmproxy和扫描器不是同一台主机，则设置为扫描器的ip地址",
-    "interval": 配置发包间隔，以毫秒为单位，比如100,
-    "scanner_port": 扫描器监听的端口，比如9999
+    "sqli_payload": "payloads/sqli-sqlserver.txt",  //sql注入的payload文件
+    "server_host": "192.168.1.25",  //匹配目标服务器，*代表匹配所有目标
+    "https_server":false,   //服务器是否为https
+    "proxy_forward":"127.0.0.1:8888",   //代理配置，如无代理则为空字符串
+    "static": ["html", "htm", "shtml", "js", "css", "jpeg", "jpg", "png", "gif", "ico", "woff2", "txt", "woff", "axd"], //不扫描的静态文件后缀
+    "scanner_host": "127.0.0.1",    //扫描器地址
+    "scanner_port": 9999,   //扫描器监听的端口
+    "interval": 50      //发包间隔
 }
 ```
 
