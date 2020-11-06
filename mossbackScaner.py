@@ -9,15 +9,17 @@ import sys
 import http.client
 import time
 import threading
-
 from socket import *
 from time import ctime
 import hashlib
 import subprocess
 from subprocess import PIPE
-from scanner_sqli import test_sqli
-from scanner_unauth_access import test_unauth_access
+
 from color_print import *
+
+from scanner_sqli import test_sqli
+from scanner_cmdi import test_cmdi
+from scanner_unauth_access import test_unauth_access
 
 global glo_conf
 global glo_pkg_list
@@ -38,6 +40,7 @@ glo_lock = threading.Lock()
 
 glo_scanner = []
 glo_scanner.append(scanner_factory("test_sqli"))
+glo_scanner.append(scanner_factory("test_cmdi"))
 glo_scanner.append(scanner_factory("test_unauth_access"))
 
 
