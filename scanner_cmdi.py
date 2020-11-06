@@ -20,7 +20,7 @@ class test_cmdi():
         with open(self.conf['cmdi_payload'], "r") as fp:
             self.payloads = fp.read().replace('PH_TIMEOUT', str(self.blind_timeout)).split('\n')
 
-    def send_recv(self, method, uri, version, body, header, host):
+    def send_recv(self, method, uri, version, header, body, host):
         if self.http_client == None:
             srv = host.split(':')
             srvhost = srv[0]
@@ -97,7 +97,7 @@ class test_cmdi():
                     params[i] = param_bak + payload.strip()
                     uri_new = '&'.join(params)
 
-                    if self.send_recv(method, path + uri_new, version, body, header, host) is True:
+                    if self.send_recv(method, path + uri_new, version, header, body, host) is True:
                         break
 
                     params[i] = param_bak
@@ -114,7 +114,7 @@ class test_cmdi():
                 bodys[i] = body_bak + payload.strip()
                 body_new = '&'.join(bodys)
 
-                if self.send_recv(method, uri, version, body_new, header, host) is True:
+                if self.send_recv(method, uri, version, header, body_new, host) is True:
                     break
 
                 bodys[i] = body_bak
@@ -133,7 +133,7 @@ class test_cmdi():
                 bodyj[key] = body_bak + payload.strip()
                 body_new = json.dumps(bodyj)
 
-                if self.send_recv(method, uri, version, body, header, host) is True:
+                if self.send_recv(method, uri, version, header, body, host) is True:
                     break
 
                 bodyj[key] = body_bak
