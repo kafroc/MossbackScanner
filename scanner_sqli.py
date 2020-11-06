@@ -13,7 +13,7 @@ class test_sqli():
         with open('config.json', 'r') as fp:
             self.conf = json.loads(fp.read())
         self.name = 'SQLi'
-        self.log = format_save('SQLi')
+        self.log = format_save(self.name)
         self.checkpkg = check_repeat_package(key_with_value=False)
         self.blind_timeout = 10
         self.http_client = None
