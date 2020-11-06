@@ -68,6 +68,7 @@ class test_unauth_access():
 
         try:
             ret = self.http_client.getresponse().getheader("Content-Length")
+            self.http_client = None
             return int(ret)
         except Exception as exp:
             printDarkRed("[ERROR] [UNAUTH] http.client.response")
