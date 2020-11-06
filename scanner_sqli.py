@@ -7,6 +7,7 @@ from utils import format_save
 from utils import check_repeat_package
 from color_print import *
 
+
 class test_sqli():
     def __init__(self):
         with open('config.json', 'r') as fp:
@@ -15,8 +16,71 @@ class test_sqli():
         self.log = format_save('SQLi')
         self.checkpkg = check_repeat_package(key_with_value=False)
         self.blind_timeout = 10
-        with open(self.conf['payload_file'], "r") as fp:
+        self.http_client = None
+        with open(self.conf['sqli_payload'], "r") as fp:
             self.payloads = fp.read().replace('PH_TIMEOUT', str(self.blind_timeout)).split('\n')
+
+    def send_recv(self, method, uri, version, body, header, host):
+        if self.http_client == None:
+            srv = host.split(':')
+            srvhost = srv[0]
+            if len(srv) != 2:
+                if self.conf['https_server'] is True:
+                    srvport = 443
+                else:
+                    srvport = 80
+            else:
+                srvport = srv[1]
+
+            try:
+                if self.conf['proxy_forward'] != '':
+                    pxy = self.conf['proxy_forward'].split(':')
+                    pxyhost = pxy[0]
+                    pxyport = pxy[1]
+
+                    if self.conf['https_server'] is True:
+                        self.http_client = http.client.HTTPSConnection(
+                            pxyhost, pxyport, timeout=self.blind_timeout)
+                    else:
+                        self.http_client = http.client.HTTPConnection(
+                            pxyhost, pxyport, timeout=self.blind_timeout)
+
+                    self.http_client.set_tunnel(srvhost, srvport)
+                else:
+                    if self.conf['https_server'] is True:
+                        self.http_client = http.client.HTTPSConnection(
+                            srvhost, srvport, timeout=self.blind_timeout)
+                    else:
+                        self.http_client = http.client.HTTPConnection(
+                            srvhost, srvport, timeout=self.blind_timeout)
+            except Exception as exp:
+                printDarkRed("[ERROR] [SQLi] http.client.connection")
+                printDarkRed(exp)
+                return False
+
+        headjson = json.loads(header)
+        headjson['Content-Length'] = len(body)
+        try:
+            self.http_client.request(
+                method, uri.replace(' ', '%20'), body, headjson)
+        except Exception as exp:
+            printDarkRed("[ERROR] [SQLi] http.client.request")
+            printDarkRed(exp)
+            self.http_client = None
+            return False
+
+        try:
+            self.http_client.getresponse().read()
+        except socket.timeout as exp:
+            self.log.format_save(method, uri.replace(
+                ' ', '%20'), version, header, body)
+            self.http_client = None
+            return True
+        except Exception as exp:
+            printDarkRed("[ERROR] [SQLi] http.client.response")
+            printDarkRed(exp)
+            self.http_client = None
+            return False
 
     def test_sqli_uri(self, method, uri, version, header, body, host):
         params = uri.split('?')
@@ -28,25 +92,14 @@ class test_sqli():
                 printDarkYellow("*", end='', flush=True)
                 param_bak = params[i]
                 for payload in self.payloads:
-                    time.sleep(0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
+                    time.sleep(
+                        0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
                     params[i] = param_bak + payload.strip()
                     uri_new = '&'.join(params)
 
-                    try:
-                        if self.conf['https_server'] is True:
-                            hc = http.client.HTTPSConnection(host, timeout=self.blind_timeout)
-                        else:
-                            hc = http.client.HTTPConnection(host, timeout=self.blind_timeout)
-                        hc.request(method, path+uri_new.replace(' ', '%20'), body, json.loads(header))
-                    except Exception as exp:
-                        printDarkRed(exp)
+                    if self.send_recv(method, path + uri_new, version, body, header, host) is True:
+                        break
 
-                    try:
-                        hc.getresponse().read()
-                    except socket.timeout as exp:
-                        self.log.format_save(method, path+uri_new.replace(' ', '%20'), version, header, body)
-                    except Exception as exp:
-                        printDarkRed(exp)
                     params[i] = param_bak
             printDarkYellow('')
 
@@ -56,27 +109,14 @@ class test_sqli():
             printDarkYellow("*", end='', flush=True)
             body_bak = bodys[i]
             for payload in self.payloads:
-                time.sleep(0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
+                time.sleep(
+                    0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
                 bodys[i] = body_bak + payload.strip()
                 body_new = '&'.join(bodys)
-                
-                try:
-                    if self.conf['https_server'] is True:
-                        hc = http.client.HTTPSConnection(host, timeout=self.blind_timeout)
-                    else:
-                        hc = http.client.HTTPConnection(host, timeout=self.blind_timeout)
-                    hj = json.loads(header)
-                    hj['Content-Length'] = len(body_new)
-                    hc.request(method, uri, body_new, hj)
-                except Exception as exp:
-                    printDarkRed(exp)
 
-                try:
-                    hc.getresponse().read()
-                except socket.timeout as exp:
-                    self.log.format_save(method, uri, version, header, body_new)
-                except Exception as exp:
-                    printDarkRed(exp)
+                if self.send_recv(method, uri, version, body_new, header, host) is True:
+                    break
+
                 bodys[i] = body_bak
         printDarkYellow('')
 
@@ -88,27 +128,14 @@ class test_sqli():
             if not isinstance(bodyj[key], str):
                 continue
             for payload in self.payloads:
-                time.sleep(0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
+                time.sleep(
+                    0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
                 bodyj[key] = body_bak + payload.strip()
                 body_new = json.dumps(bodyj)
-                
-                try:
-                    if self.conf['https_server'] is True:
-                        hc = http.client.HTTPSConnection(host, timeout=self.blind_timeout)
-                    else:
-                        hc = http.client.HTTPConnection(host, timeout=self.blind_timeout)
-                    hj = json.loads(header)
-                    hj['Content-Length'] = len(body_new)
-                    hc.request(method, uri, body_new, hj)
-                except Exception as exp:
-                    printDarkRed(exp)
 
-                try:
-                    hc.getresponse().read()
-                except socket.timeout as exp:
-                    self.log.format_save(method, uri, version, header, body_new)
-                except Exception as exp:
-                    printDarkRed(exp)
+                if self.send_recv(method, uri, version, body, header, host) is True:
+                    break
+
                 bodyj[key] = body_bak
         printDarkYellow('')
 
@@ -118,13 +145,14 @@ class test_sqli():
             self.test_json_body(method, uri, version, header, body, host)
         except:
             self.test_kv_body(method, uri, version, header, body, host)
-            
+
     def run(self, method, uri, version, header, body, host):
         if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
             return
         if uri.split('?')[0].split('.')[-1] in self.conf['static']:
             return
-        printGreen('Doing %s testing: %s %s/%s' % (self.name, method, host, uri))
+        printGreen('Doing %s testing: %s %s/%s' %
+                   (self.name, method, host, uri))
         self.test_sqli_uri(method, uri, version, header, body, host)
         if method == 'POST':
             self.test_sqli_body(method, uri, version, header, body, host)
