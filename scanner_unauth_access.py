@@ -11,15 +11,16 @@ class test_unauth_access():
         self.filecnt = 1
         with open('config.json', 'r') as fp:
             self.conf = json.loads(fp.read())
-        self.log = format_save('unauth')
+        self.name = 'unauth'
+        self.log = format_save(self.name)
+        self.httptimeout = 10
         self.checkpkg = check_repeat_package(key_with_value=True)
-        self.name = 'unauth access'
 
     def test_req_with_cookie(self, method, uri, version, header, body, host):
         if self.conf['https_server'] is True:
-            hc = http.client.HTTPSConnection(host, timeout=3)
+            hc = http.client.HTTPSConnection(host, timeout=self.httptimeout)
         else:
-            hc = http.client.HTTPConnection(host, timeout=3)
+            hc = http.client.HTTPConnection(host, timeout=self.httptimeout)
         hc.request(method, uri, body, json.loads(header))
         l1 = hc.getresponse().getheader("Content-Length")
 
@@ -30,9 +31,9 @@ class test_unauth_access():
 
     def test_req_without_cookie(self, method, uri, version, header, body, host):
         if self.conf['https_server'] is True:
-            hc = http.client.HTTPSConnection(host, timeout=3)
+            hc = http.client.HTTPSConnection(host, timeout=self.httptimeout)
         else:
-            hc = http.client.HTTPConnection(host, timeout=3)
+            hc = http.client.HTTPConnection(host, timeout=self.httptimeout)
         hj = json.loads(header)
         hj["Cookie"] = ''
         hc.request(method, uri, body, hj)
