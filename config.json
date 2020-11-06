@@ -1,5 +1,5 @@
 {
-    "payload_file": "payloads/sqli-sqlserver.txt",
+    "sqli_payload": "payloads/sqli-sqlserver.txt",
     "server_host": "*",
     "https_server":false,
     "proxy_forward":"",
