@@ -1,7 +1,8 @@
 {
     "payload_file": "payloads/sqli-sqlserver.txt",
     "server_host": "*",
-    "https_server":true,
+    "https_server":false,
+    "proxy_forward":"",
     "static": ["html", "htm", "shtml", "js", "css", "jpeg", "jpg", "png", "gif", "ico", "woff2", "txt", "woff", "axd"],
     "scanner_host": "127.0.0.1",
     "scanner_port": 9999,
