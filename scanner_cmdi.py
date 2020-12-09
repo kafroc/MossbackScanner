@@ -3,12 +3,13 @@ import time
 import socket
 import random
 import http.client
+import ssl
 from utils import format_save
 from utils import check_repeat_package
 from color_print import *
 
 
-class test_cmdi():
+class scanner_cmdi():
     def __init__(self):
         with open('config.json', 'r') as fp:
             self.conf = json.loads(fp.read())
@@ -40,7 +41,7 @@ class test_cmdi():
 
                     if self.conf['https_server'] is True:
                         self.http_client = http.client.HTTPSConnection(
-                            pxyhost, pxyport, timeout=self.blind_timeout)
+                            pxyhost, pxyport, timeout=self.blind_timeout, context=ssl._create_unverified_context())
                     else:
                         self.http_client = http.client.HTTPConnection(
                             pxyhost, pxyport, timeout=self.blind_timeout)
@@ -49,7 +50,7 @@ class test_cmdi():
                 else:
                     if self.conf['https_server'] is True:
                         self.http_client = http.client.HTTPSConnection(
-                            srvhost, srvport, timeout=self.blind_timeout)
+                            srvhost, srvport, timeout=self.blind_timeout, context=ssl._create_unverified_context())
                     else:
                         self.http_client = http.client.HTTPConnection(
                             srvhost, srvport, timeout=self.blind_timeout)
@@ -60,6 +61,7 @@ class test_cmdi():
 
         headjson = json.loads(header)
         headjson['Content-Length'] = len(body)
+
         try:
             self.http_client.request(
                 method, uri.replace(' ', '%20'), body, headjson)
@@ -96,7 +98,7 @@ class test_cmdi():
                         0.001 * self.conf["interval"] + 0.001 * random.randint(1, 9))
                     params[i] = param_bak + payload.strip()
                     uri_new = '&'.join(params)
-
+                    
                     if self.send_recv(method, path + uri_new, version, header, body, host) is True:
                         break
 
@@ -146,11 +148,12 @@ class test_cmdi():
         except:
             self.test_kv_body(method, uri, version, header, body, host)
 
-    def run(self, method, uri, version, header, body, host):
+    def run(self, method, uri, version, header, body):
         if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
             return
         if uri.split('?')[0].split('.')[-1] in self.conf['static']:
             return
+        host = json.loads(header)['Host']
         printGreen('Doing %s testing: %s %s/%s' %
                    (self.name, method, host, uri))
         self.test_cmdi_uri(method, uri, version, header, body, host)
