@@ -1,12 +1,13 @@
 import json
 import time
 import http.client
+import ssl
 from utils import format_save
 from utils import check_repeat_package
 from color_print import *
 
 
-class test_unauth_access():
+class scanner_unauth_access():
     def __init__(self):
         self.filecnt = 1
         with open('config.json', 'r') as fp:
@@ -37,7 +38,7 @@ class test_unauth_access():
 
                     if self.conf['https_server'] is True:
                         self.http_client = http.client.HTTPSConnection(
-                            pxyhost, pxyport, timeout=self.httptimeout)
+                            pxyhost, pxyport, timeout=self.httptimeout, context=ssl._create_unverified_context())
                     else:
                         self.http_client = http.client.HTTPConnection(
                             pxyhost, pxyport, timeout=self.httptimeout)
@@ -46,7 +47,7 @@ class test_unauth_access():
                 else:
                     if self.conf['https_server'] is True:
                         self.http_client = http.client.HTTPSConnection(
-                            srvhost, srvport, timeout=self.httptimeout)
+                            srvhost, srvport, timeout=self.httptimeout, context=ssl._create_unverified_context())
                     else:
                         self.http_client = http.client.HTTPConnection(
                             srvhost, srvport, timeout=self.httptimeout)
@@ -76,7 +77,7 @@ class test_unauth_access():
             self.http_client = None
             return -1
 
-    def run(self, method, uri, version, header, body, host):
+    def run(self, method, uri, version, header, body):
         if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
             return
 
@@ -84,6 +85,7 @@ class test_unauth_access():
             return
 
         if uri.split('?')[0].split('.')[-1] not in self.conf['static']:
+            host = json.loads(header)['Host']
             printGreen('Doing %s testing: %s %s/%s' %
                        (self.name, method, host, uri))
 
