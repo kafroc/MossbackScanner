@@ -6,19 +6,52 @@ import mitmproxy
 import json
 import socket
 import time
-import hashlib
+import threading
 
-UDP_PACK_LEN = 1024
+MAXBUFSIZ = 1048576
 
 
 class parse_request:
     def __init__(self):
-        self.client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.reqhash = []
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         with open('config.json', 'r') as fp:
             conf = json.loads(fp.read())
             self.server_host = conf['server_host']
             self.scanner_srv = (conf['scanner_host'], conf['scanner_port'])
+        self.connect = False
+        self.req_buff = []
+        self.lock = threading.Lock()
+        self.thr = threading.Thread(target=self.t_sendtoScanner, args=())
+        self.thr.start()
+
+    def t_sendtoScanner(self):
+        while True:
+            if len(self.req_buff) == 0:
+                time.sleep(0.5)
+                continue
+            
+            self.lock.acquire()
+            message = self.req_buff.pop(0)
+            self.lock.release()
+            
+            if len(message) >= MAXBUFSIZ:
+                print("[WARNING] Package is too large.")
+                continue
+
+            while self.connect is False:
+                try:
+                    self.client.connect(self.scanner_srv)
+                    self.connect = True
+                except Exception as exp:
+                    print(exp, flush=True)
+                    time.sleep(1)
+
+            try:
+                self.client.sendall(message.encode())
+            except Exception as exp:
+                print(exp, flush=True)
+                self.connect = False
+            time.sleep(0.1)
 
     def request(self, flow: mitmproxy.http.HTTPFlow):
         req = flow.request
@@ -30,40 +63,17 @@ class parse_request:
             dic['version'] = req.http_version
 
             # headers
-            header = {}
-            for key, value in req.headers.items():
-                header[key] = value
-                if key == 'Host':
-                    dic['host'] = value
-            dic['header'] = json.dumps(header)
+            head = {}
+            for key,value in req.headers.items():
+                head[key] = value
+            dic['header'] = json.dumps(head)
 
             # post body
             dic['body'] = req.text
 
-            output = json.dumps(dic)
-            m = hashlib.md5()
-            m.update(output.encode())
-
-            pack_len = len(output)
-            pack_num = pack_len // UDP_PACK_LEN
-            if pack_len % UDP_PACK_LEN != 0:
-                pack_num += 1
-
-            self.client.sendto((str(pack_num).zfill(
-                4) + m.hexdigest()).encode('utf-8'), self.scanner_srv)
-            time.sleep(0.01)
-
-            for i in range(pack_num - 1):
-                self.client.sendto(
-                    output[i * UDP_PACK_LEN:(i + 1) * UDP_PACK_LEN].encode('utf-8'), self.scanner_srv)
-                time.sleep(0.01)
-
-            self.client.sendto(
-                output[(pack_num - 1) * UDP_PACK_LEN:].encode('utf-8'), self.scanner_srv)
-
-            response, _ = self.client.recvfrom(2)
-            if response.decode() != "OK":
-                time.sleep(0.5)
+            self.lock.acquire()
+            self.req_buff.append(json.dumps(dic))
+            self.lock.release()
 
 
 addons = [
