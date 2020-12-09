@@ -1,9 +1,10 @@
 {
     "server_host": "*",
-    "https_server":false,
+    "https_server": false,
     "proxy_forward":"",
     "sqli_payload": "payloads/sqli-sqlserver.txt",
-    "cmdi_payload": "payloads/cmdi-linux.txt",
+    "cmdi_payload": "payloads/cmdi-windows.txt",
+    "plugins": ["scanner_unauth_access", "scanner_cmdi", "scanner_sqli"],
     "static": ["html", "htm", "shtml", "js", "css", "jpeg", "jpg", "png", "gif", "ico", "woff2", "txt", "woff", "axd"],
     "scanner_host": "127.0.0.1",
     "scanner_port": 9999,
