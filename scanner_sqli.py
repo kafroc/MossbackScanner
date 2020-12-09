@@ -3,12 +3,13 @@ import time
 import socket
 import random
 import http.client
+import ssl
 from utils import format_save
 from utils import check_repeat_package
 from color_print import *
 
 
-class test_sqli():
+class scanner_sqli():
     def __init__(self):
         with open('config.json', 'r') as fp:
             self.conf = json.loads(fp.read())
@@ -40,7 +41,7 @@ class test_sqli():
 
                     if self.conf['https_server'] is True:
                         self.http_client = http.client.HTTPSConnection(
-                            pxyhost, pxyport, timeout=self.blind_timeout)
+                            pxyhost, pxyport, timeout=self.blind_timeout, context=ssl._create_unverified_context())
                     else:
                         self.http_client = http.client.HTTPConnection(
                             pxyhost, pxyport, timeout=self.blind_timeout)
@@ -49,7 +50,7 @@ class test_sqli():
                 else:
                     if self.conf['https_server'] is True:
                         self.http_client = http.client.HTTPSConnection(
-                            srvhost, srvport, timeout=self.blind_timeout)
+                            srvhost, srvport, timeout=self.blind_timeout, context=ssl._create_unverified_context())
                     else:
                         self.http_client = http.client.HTTPConnection(
                             srvhost, srvport, timeout=self.blind_timeout)
@@ -78,7 +79,7 @@ class test_sqli():
             return True
         except Exception as exp:
             printDarkRed("[ERROR] [SQLi] http.client.response")
-            printDarkRed(exp)
+            printDarkRed(exp)# ('Connect fail','fuwuqi',null,11501,null))
             self.http_client = None
             return False
 
@@ -146,11 +147,12 @@ class test_sqli():
         except:
             self.test_kv_body(method, uri, version, header, body, host)
 
-    def run(self, method, uri, version, header, body, host):
+    def run(self, method, uri, version, header, body):
         if self.checkpkg.is_repeat_pkg(method, uri, body) is True:
             return
         if uri.split('?')[0].split('.')[-1] in self.conf['static']:
             return
+        host = json.loads(header)['Host']
         printGreen('Doing %s testing: %s %s/%s' %
                    (self.name, method, host, uri))
         self.test_sqli_uri(method, uri, version, header, body, host)
