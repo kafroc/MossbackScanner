@@ -3,6 +3,7 @@ import json
 import hashlib
 import ctypes
 import sys
+import os
 from color_print import *
 
 
@@ -12,6 +13,41 @@ class format_save():
         self.total_cnt = 1
         with open('config.json', 'r') as fp:
             self.conf = json.loads(fp.read())
+
+    def save_request(self, method, uri, version, header, body):
+        if uri.split('?')[0].split('.')[-1] in self.conf['static']:
+            return
+        
+        # detect the state of server dir
+        path = self.conf['server_host'] + '/'
+        path1 = uri.split('?')[0]
+        if path1[-1] == '/':
+            return
+
+        filename = path1.split('/')[-1]
+        path += '/'.join(path1.split('/')[:-1])
+
+        filepath = path + '/' + filename
+        if os.path.isfile(filepath) is True:
+            return
+        
+        try:
+            os.makedirs(path)
+        except:
+            pass
+
+        
+
+        pkg_content = method + ' ' + uri + ' ' + version + '\n'
+        hj = json.loads(header)
+        for head in hj:
+            pkg_content += head + ': ' + hj[head] + '\n'
+        pkg_content += '\n'
+        if method == 'POST':
+            pkg_content += body
+
+        with open(filepath, 'w', errors='ignore') as fp:
+            fp.write(pkg_content)
 
     def format_save(self, method, uri, version, header, body):
         printRed("================ FIND NEW VUL (%s) ================\nURI: %s %s" % (
@@ -25,7 +61,8 @@ class format_save():
         if method == 'POST':
             pkg_content += body
 
-        fn = "logs/" + time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime()) + '_' + str(self.total_cnt).zfill(4) + '_' + self.postfix + '.txt'
+        fn = "logs/" + time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime()) + '_' + str(
+            self.total_cnt).zfill(4) + '_' + self.postfix + '.txt'
         with open(fn, 'w', errors='ignore') as fp:
             fp.write(pkg_content)
 
@@ -58,7 +95,7 @@ class check_repeat_package():
             parms = uris[1].split('&')
             for parm in parms:
                 hash_msg += parm.split('=')[0]
-        
+
         if method == 'POST':
             try:
                 x = json.loads(body)
